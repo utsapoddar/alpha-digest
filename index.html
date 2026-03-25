@@ -47,8 +47,11 @@
   .archive-link:hover { background: rgba(56,205,214,0.1); color: #38CDD6; border-color: rgba(56,205,214,0.3); }
 
   /* Footer */
-  footer { border-top: 1px solid rgba(255,255,255,0.07); padding: 24px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); }
+  footer { border-top: 1px solid rgba(255,255,255,0.07); padding: 32px 24px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); }
+  footer p { margin-top: 16px; }
   footer a { color: #38CDD6; text-decoration: none; }
+  .portfolio-btn { display: inline-flex; align-items: center; gap: 6px; background: #424652; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 8px; text-decoration: none; transition: background 0.2s; }
+  .portfolio-btn:hover { background: #52566a; }
 </style>
 </head>
 <body>
@@ -82,10 +85,8 @@
 
 
 <footer>
-  Built by <a href="https://utsapoddar.github.io" target="_blank">Utsa Poddar</a> &nbsp;·&nbsp;
-  <a href="https://utsapoddar.github.io" target="_blank">← Portfolio</a> &nbsp;·&nbsp;
-  Data: SEC EDGAR, CoinGecko, Yahoo Finance &nbsp;·&nbsp;
-  Not investment advice.
+  <a href="https://utsapoddar.github.io" target="_blank" class="portfolio-btn">← Back to Portfolio</a>
+  <p>Built by <a href="https://utsapoddar.github.io" target="_blank">Utsa Poddar</a> &nbsp;·&nbsp; Data: SEC EDGAR, CoinGecko, Yahoo Finance &nbsp;·&nbsp; Not investment advice.</p>
 </footer>
 
 </body>
