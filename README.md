@@ -1,102 +1,107 @@
 # Alpha Digest
 
-A fully automated weekly briefing on what the world's best investors are doing — and why. Tracks 25 top investors, funds, and institutions across SEC filings, crypto treasuries, commodities, and financial news, then distills it into a single concise report delivered every Monday.
+Alpha Digest turns public market disclosures and news into a weekly investor briefing. The pipeline tracks 25 people, funds, companies, and institutions, then emails and publishes the result every Monday.
 
-**[Read the latest issue →](https://utsapoddar.github.io/alpha-digest)**
+[![Weekly pipeline](https://github.com/utsapoddar/alpha-digest/actions/workflows/weekly-digest.yml/badge.svg)](https://github.com/utsapoddar/alpha-digest/actions/workflows/weekly-digest.yml)
 
-## How It Works
+**[Read the latest issue](https://utsapoddar.github.io/alpha-digest)**
 
-A GitHub Actions pipeline runs every Monday morning and executes a five-stage process:
+## What it does
 
-1. **Fetch** — Pulls data from SEC EDGAR (Form 4 insider trades + 13F institutional holdings), CoinGecko corporate crypto treasuries, Yahoo Finance commodity prices, and 12 financial news RSS feeds (MarketWatch, CNBC, WSJ, Seeking Alpha, Bloomberg, and more)
-2. **Enrich** — Cross-references raw filings and news against a watchlist of 25 tracked entities, linking trades to the investors who made them
-3. **Summarize** — Sends enriched data to Groq (LLM) to produce a concise narrative for each investor — what they did and why it matters
-4. **Render** — Generates a styled HTML digest using Jinja2 templates (one for email, one for web)
-5. **Deliver** — Emails the digest to subscribers via Gmail SMTP and publishes the web version to this GitHub Pages site
+1. **Fetches primary and secondary evidence.** SEC EDGAR supplies Form 4 and 13F filings. CoinGecko supplies corporate crypto-treasury data. Yahoo Finance supplies weekly commodity moves. Google News and configured RSS feeds supply current context.
+2. **Joins evidence to a 25-entity watchlist.** The enrichment stage connects filings, price changes, and headlines to the people or institutions they describe.
+3. **Writes a grounded summary.** A cross-provider model chain receives only the collected evidence and must return structured JSON. The prompt forbids unsupported facts, URLs, and investment recommendations.
+4. **Builds two outputs.** Jinja templates render an email edition and a web edition from the same structured result.
+5. **Delivers and archives the issue.** Gmail SMTP sends the briefing. The publisher writes the current issue and dated archive to the `gh-pages` branch.
 
-## Tracked Investors
+## Production path
 
-| Investor / Fund | Data Sources |
-|---|---|
-| Warren Buffett / Berkshire Hathaway | Form 4, 13F, News |
-| Michael Burry / Scion Asset Management | Form 4, 13F, News |
-| Ray Dalio / Bridgewater Associates | 13F, News |
-| Stanley Druckenmiller / Duquesne Family Office | Form 4, 13F, News |
-| Howard Marks / Oaktree Capital Management | Form 4, 13F, News |
-| Cathie Wood / ARK Invest | 13F, News |
-| Jamie Dimon / JPMorgan Chase | Form 4, News |
-| Michael Saylor / Strategy | Form 4, 13F, Crypto (BTC), News |
-| BlackRock | 13F, News |
-| Shopify | 13F, News |
-| Jeff Gundlach / DoubleLine Capital | News |
-| Eric Nuttall / Ninepoint Partners | 13F, News |
-| Jerome Powell / Federal Reserve | News |
-| Tiff Macklem / Bank of Canada | News |
-| World Gold Council | News |
-
-Plus commodity tracking: Gold, Oil (WTI), Silver.
-
-## Tech Stack
-
-| Component | Tool |
-|---|---|
-| Language | Python 3.12 |
-| SEC data | SEC EDGAR API (Form 4 + 13F) |
-| Crypto data | CoinGecko API |
-| Commodity data | Yahoo Finance |
-| News | Google News RSS + 12 custom RSS feeds |
-| LLM | Groq API |
-| Templating | Jinja2 |
-| Email | Gmail SMTP |
-| Hosting | GitHub Pages |
-| Automation | GitHub Actions (cron: every Monday 10:00 UTC) |
-
-## Project Structure
-
-Everything lives in this repo: the pipeline on `main`, the published site on `gh-pages`.
-
+```text
+GitHub Actions (Monday 10:17 UTC)
+        |
+        v
+SEC EDGAR + CoinGecko + Yahoo Finance + RSS
+        |
+        v
+Normalize and enrich against watchlist.csv
+        |
+        v
+Gemini primary models -> NVIDIA fallback
+        |
+        v
+Structured JSON -> Jinja email and web templates
+        |
+        +--> Gmail SMTP
+        |
+        +--> gh-pages archive
 ```
-main/                       # Pipeline
-├── main.py                 # Pipeline entrypoint
-├── watchlist.csv           # 25 tracked entities + SEC CIKs
-├── config/
-│   ├── sources.yaml        # Toggle fetchers on/off
-│   ├── feeds.csv           # 12 custom RSS feed URLs
-│   └── recipients.example.yaml  # Subscriber list template
-├── digest/
-│   ├── fetchers/           # SEC EDGAR, news, crypto, commodities
-│   ├── enrichers/          # Cross-reference + context
-│   ├── summarizer.py       # LLM summarization
-│   ├── renderer.py         # Jinja2 HTML rendering
-│   ├── notifier.py         # Gmail SMTP delivery
-│   └── publisher.py        # Publishes to gh-pages
-├── templates/
-│   ├── digest_email.html.j2
-│   ├── digest_web.html.j2
-│   ├── landing_page.html.j2
-│   └── archive_index.html.j2
-└── .github/workflows/
-    └── weekly-digest.yml   # Cron automation
 
-gh-pages/                   # Published site
-├── index.html              # Landing page
-└── archive/                # Every published weekly digest
+The workflow uses two pinned Gemini models followed by an NVIDIA NIM fallback. Transient failures retry on the current model. Permanent model errors move to the next provider. A 35-minute workflow budget covers the bounded retry path.
+
+## Why this is an engineering project
+
+- **Source-aware ingestion:** each fetcher has a narrow contract and can be enabled independently in `config/sources.yaml`.
+- **Failure isolation:** model retries, cross-provider fallback, email fallback storage, and a cached last-run boundary keep one failing service from silently corrupting the issue.
+- **Reproducible presentation:** email and web pages are rendered from the same structured response.
+- **Privacy separation:** subscriber addresses and credentials stay in ignored local files or GitHub Actions secrets.
+- **Deployment evidence:** the public archive and Actions history expose whether the scheduled system is producing output.
+
+## Repository map
+
+```text
+main.py                         pipeline coordinator
+watchlist.csv                   25 tracked entities and source identifiers
+config/sources.yaml             fetcher switches
+config/feeds.csv                configured RSS sources
+digest/fetchers/                SEC, news, crypto, commodity, and RSS adapters
+digest/enrichers/context.py     evidence-to-entity joining
+digest/summarizer.py            structured prompt and provider fallback
+digest/renderer.py              email and web rendering
+digest/notifier.py              SMTP delivery and local fallback
+digest/publisher.py             gh-pages publishing
+templates/                      Jinja templates
+.github/workflows/              weekly production schedule
+tests/                          focused summarizer regression tests
+```
+
+For a deeper technical walkthrough, see:
+
+- [Architecture](docs/architecture.md)
+- [Engineering decisions](docs/engineering-decisions.md)
+- [Interview guide](docs/interview-guide.md)
+
+## Run locally
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+cp config/recipients.example.yaml config/recipients.yaml
+.venv/bin/python main.py --dry-run
+```
+
+The dry run writes `data/last_digest.html` and skips email and publishing. Model credentials are still required because summarization is part of the run.
+
+Run the tests with:
+
+```bash
+.venv/bin/python -m pytest -q
 ```
 
 ## Configuration
 
-Recipient addresses are personal data and are kept out of the repo. In CI, set the
-`DIGEST_RECIPIENTS` secret to a comma-separated list. Locally, copy
-`config/recipients.example.yaml` to `config/recipients.yaml` (gitignored).
+Production reads these GitHub Actions secrets:
 
-Required secrets: `GEMINI_API_KEY`, `NVIDIA_API_KEY`, `GMAIL_ADDRESS`,
-`GMAIL_APP_PASSWORD`, `ALPHA_DIGEST_TOKEN`, `DIGEST_RECIPIENTS`.
+- `GEMINI_API_KEY`
+- `NVIDIA_API_KEY`
+- `GMAIL_ADDRESS`
+- `GMAIL_APP_PASSWORD`
+- `ALPHA_DIGEST_TOKEN`
+- `DIGEST_RECIPIENTS`
 
-## Sample Output
+Subscriber addresses are not stored in Git. Local recipients live in the ignored `config/recipients.yaml` file.
 
-Each digest includes:
-- **Macro context** — Key market events and Fed/BoC decisions
-- **Commodity snapshot** — Weekly price changes for gold, oil, and silver
-- **Per-investor briefings** — What each investor bought/sold, with SEC filing links and AI-generated context on why
+## Boundaries
 
-Built by [Utsa Poddar](https://utsapoddar.github.io)
+Alpha Digest summarizes public evidence. It does not predict returns or recommend trades. Form 13F data is delayed by regulation, news feeds can omit context, and an LLM summary can still be wrong. Every issue should be read as a research starting point, not financial advice.
+
+Built by [Utsa Poddar](https://utsapoddar.github.io).
