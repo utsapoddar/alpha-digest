@@ -10,7 +10,11 @@ Alpha Digest turns public market disclosures and news into a weekly investor bri
 
 [![Alpha Digest architecture diagram](docs/media/architecture.png)](docs/media/architecture.png)
 
-**[Watch the one-minute project explainer →](docs/media/explainer.mp4)** · [Download the architecture PDF](docs/media/architecture.pdf)
+### Video walkthrough
+
+https://github.com/user-attachments/assets/0592639e-fe7a-49a4-8c57-894e652f2a1d
+
+[Download the architecture PDF](docs/media/architecture.pdf)
 
 <img src="docs/img/latest-issue.png" alt="Top of the published web edition: tracked-entity summary, macro note, and weekly commodity moves" width="600">
 
