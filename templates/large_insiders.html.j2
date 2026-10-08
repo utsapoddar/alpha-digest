@@ -1,0 +1,15 @@
+{% if insider_coverage %}
+<section style="padding: 24px;">
+  <h2>Large insider trades — US$1 million+</h2>
+  <p>{{ insider_coverage }}</p>
+  <p>Reference tools (not ingested): <a href="https://www.google.com/finance/">Google Finance</a> · <a href="http://openinsider.com/">OpenInsider</a> · <a href="https://finviz.com/insidertrading.ashx">Finviz</a></p>
+  {% for trade in large_insider_trades %}
+  <p><strong>{{ trade.ticker or trade.security }} — {{ trade.action }} — US${{ "{:,.2f}".format(trade.value_usd) }}</strong><br>
+    {{ trade.entity }} · Trade: {{ trade.transaction_date or "unknown" }} · Filed: {{ trade.date }}<br>
+    {% if trade.source_url %}<a href="{{ trade.source_url }}">SEC filing</a>{% endif %}
+    · <a href="{{ trade.openinsider_url or 'http://openinsider.com/' }}">OpenInsider</a>
+    · <a href="{{ trade.finviz_url or 'https://finviz.com/insidertrading.ashx' }}">Finviz</a>
+  </p>
+  {% else %}<p>No qualifying transactions were found in the inspected filings.</p>{% endfor %}
+</section>
+{% endif %}

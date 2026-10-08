@@ -3,6 +3,12 @@
 # To add a new source: create a fetcher in digest/fetchers/, then add it here.
 
 fetchers:
+  large_insiders:
+    enabled: true
+    description: "SEC Form 4 trades of US$1 million+; aggregator reference links only"
+    min_value_usd: 1000000
+    max_filings: 200
+
   sec_edgar:
     enabled: true
     description: "SEC EDGAR Form 4 + 13F filings"

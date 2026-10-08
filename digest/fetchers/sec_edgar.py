@@ -4,6 +4,7 @@ SEC EDGAR fetcher.
 - company CIK -> 13F-HR quarterly holdings diff vs cached prior quarter
 """
 import json
+from decimal import Decimal, InvalidOperation
 import re
 import time
 from datetime import datetime
@@ -53,6 +54,8 @@ def fetch_form4(entity: WatchlistEntity, session: requests.Session, since: datet
             continue
 
         trades = _parse_form4_xml(xml_data, entity.name, date_str)
+        for trade in trades:
+            trade["source_url"] = xml_url
         results.extend(trades)
 
     return results
@@ -65,7 +68,7 @@ def _parse_form4_xml(xml_data: bytes, entity_name: str, filing_date: str) -> lis
         return []
 
     transactions = []
-    for tx in root.findall(".//nonDerivativeTransaction"):
+    for transaction_index, tx in enumerate(root.findall(".//nonDerivativeTransaction")):
         code_el = tx.find("transactionCoding/transactionCode")
         if code_el is None or code_el.text not in ("P", "S"):
             continue
@@ -74,17 +77,27 @@ def _parse_form4_xml(xml_data: bytes, entity_name: str, filing_date: str) -> lis
         price_el = tx.find("transactionAmounts/transactionPricePerShare/value")
         security_el = tx.find("securityTitle/value")
 
-        shares = float(shares_el.text) if shares_el is not None and shares_el.text else 0
-        price = float(price_el.text) if price_el is not None and price_el.text else 0
+        try:
+            shares_value = Decimal(shares_el.text) if shares_el is not None and shares_el.text else Decimal(0)
+            price_value = Decimal(price_el.text) if price_el is not None and price_el.text else Decimal(0)
+        except InvalidOperation:
+            continue
+        if not shares_value.is_finite() or not price_value.is_finite():
+            continue
+        shares, price = float(shares_value), float(price_value)
         security = security_el.text if security_el is not None else "Unknown"
 
         transactions.append({
+            "transaction_index": transaction_index,
             "entity": entity_name,
+            "ticker": root.findtext("issuer/issuerTradingSymbol", ""),
+            "owner_cik": root.findtext(".//rptOwnerCik", ""),
+            "transaction_date": tx.findtext("transactionDate/value", ""),
             "action": "BUY" if code_el.text == "P" else "SELL",
             "security": security,
             "shares": shares,
             "price_per_share": price,
-            "value_usd": round(shares * price, 2),
+            "value_usd": float((shares_value * price_value).quantize(Decimal("0.01"))),
             "date": filing_date,
             "source": "SEC Form 4",
         })

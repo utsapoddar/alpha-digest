@@ -8,6 +8,8 @@ def _render(template_name: str, summary: dict, commodities: dict, start_date: st
     return env.get_template(template_name).render(
         entity_summaries=summary.get("entity_summaries", []),
         macro_note=summary.get("macro_note", ""),
+        large_insider_trades=summary.get("large_insider_trades", []),
+        insider_coverage=summary.get("insider_coverage", ""),
         commodities=commodities,
         start_date=start_date,
         end_date=end_date,

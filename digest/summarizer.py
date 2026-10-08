@@ -73,6 +73,7 @@ For each entity in the provided data, write a plain-English summary of 2-4 sente
 
 Rules:
 - Never invent tickers, figures, dates, entities, news, links, or facts not present in the input data.
+- Distinguish insider transaction_date from filing date. A late disclosure is not a new trade this week.
 - If a field or section is empty, say so in one concise sentence rather than fabricating context.
 - Use only the provided news URLs in news_used.
 - Be factual and concise. Use plain English, no jargon without explanation, no hype.

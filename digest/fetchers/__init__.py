@@ -1,4 +1,5 @@
 """Fetcher registry — import and register all fetchers here."""
+from digest.fetchers.large_insiders import fetch_large_insiders
 from digest.fetchers.sec_edgar import fetch_form4, fetch_13f
 from digest.fetchers.news import fetch_news
 from digest.fetchers.crypto import fetch_crypto_deltas
@@ -11,6 +12,7 @@ from digest.fetchers.feeds import fetch_feed_news
 # global fetchers are called once for the whole run.
 
 FETCHER_REGISTRY = {
+    "large_insiders": {"fn": fetch_large_insiders, "scope": "global"},
     "sec_edgar": {
         "fn_form4": fetch_form4,
         "fn_13f": fetch_13f,

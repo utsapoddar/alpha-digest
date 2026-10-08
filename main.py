@@ -102,12 +102,32 @@ def main(dry_run: bool = False):
         total = sum(len(v) for v in feed_news.values())
         print(f"[main] Custom feeds: {total} headline(s) matched to entities")
 
+    # --- Large insider disclosures (SEC data; aggregators are links only) ---
+    from digest.fetchers.large_insiders import merge_large_trades
+    insider_coverage = ""
+    large_trades = []
+    if "large_insiders" in enabled_fetchers:
+        insider_cfg = enabled_fetchers["large_insiders"]
+        minimum = insider_cfg.get("min_value_usd", 1000000)
+        discovered = FETCHER_REGISTRY["large_insiders"]["fn"](
+            session, start_date, end_date, min_value_usd=minimum,
+            max_filings=insider_cfg.get("max_filings", 200),
+        )
+        large_trades = merge_large_trades(form4_trades, discovered["trades"], minimum)
+        form4_trades = large_trades
+        insider_coverage = discovered["coverage"]
+        print(f"[main] Large insiders: {len(large_trades)} qualifying trades. {insider_coverage}")
+
     # --- Enrich ---
     enriched = enrich(form4_trades, thirteenf_results, crypto_deltas, news_by_entity)
 
     # --- Summarize ---
     print("[main] Calling LLM for summarization...")
     summary = summarize(enriched, commodities, start_str, end_str)
+
+    # Keep exact trade figures and reference links outside generated prose.
+    summary["large_insider_trades"] = large_trades
+    summary["insider_coverage"] = insider_coverage
 
     # --- Render ---
     html_body = render_html(summary, commodities, start_str, end_str)
