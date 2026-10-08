@@ -28,3 +28,9 @@ unknown prices, duplicate discovery, date distinctions and rendered links.
 A live bounded SEC fetch and rendered sample are required before completion.
 Similar aggregators should not be added merely to duplicate the same filings;
 select another source only when it provides a distinct, permitted contribution.
+
+## Final source selection — 2026-10-08
+
+User approved SEC ingestion, existing Yahoo market context, and optional
+OpenInsider exploration links. Remove Google Finance links from both editions.
+Do not add aggregator ingestion, new signals, or alter schedules in this change.

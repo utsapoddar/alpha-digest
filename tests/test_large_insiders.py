@@ -35,7 +35,8 @@ def test_both_outputs_show_primary_and_reference_links():
         html = render(summary, {}, '2026-10-01','2026-10-08')
         assert 'Large insider trades' in html
         assert 'https://www.sec.gov/filing' in html
-        assert 'https://www.google.com/finance/' in html
+        assert 'google.com/finance' not in html
+        assert 'Google Finance' not in html
         assert 'http://openinsider.com/ACME' in html
         assert 'https://finviz.com/quote.ashx?t=ACME' in html
         assert 'Bounded SEC discovery' in html

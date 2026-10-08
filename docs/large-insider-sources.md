@@ -10,8 +10,8 @@ Unknown or non-finite prices cannot establish a qualifying trade. Original
 transaction-row indices preserve distinct identical-sized trades; overlapping
 watchlist and global discovery records are deduplicated.
 
-Google Finance is a reference-tool link. OpenInsider and Finviz have reference
-links per ticker. Their data is not copied into the public archive. Source
+Google Finance is omitted. Existing Yahoo Finance commodity context is retained.
+OpenInsider and Finviz have optional reference links per ticker. Their data is not copied into the public archive. Source
 figures and these links render deterministically, independent of generated prose.
 Existing commodity, crypto, news and 13F sources remain unchanged.
 
