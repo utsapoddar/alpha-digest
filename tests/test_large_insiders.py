@@ -80,3 +80,12 @@ def test_main_dry_run_wires_fetcher_enrichment_and_rendering(tmp_path, monkeypat
     main.main(dry_run=True)
     assert calls[0][2] == {'min_value_usd':1000000,'max_filings':2}
     assert 'Test SEC coverage' in (tmp_path/'last_digest.html').read_text()
+
+
+def test_source_time_budget_preserves_existing_workflow_budget(monkeypatch):
+    from digest.fetchers import large_insiders
+    monkeypatch.setattr(large_insiders.time,'monotonic',iter([0,181,181,181]).__next__)
+    monkeypatch.setattr(large_insiders,'edgar_get_xml',lambda *args: (_ for _ in ()).throw(AssertionError('expired source must not fetch')))
+    result = large_insiders.fetch_large_insiders(None,datetime(2026,10,1),datetime(2026,10,8))
+    assert '180-second source budget' in result['coverage']
+    assert result['trades'] == []

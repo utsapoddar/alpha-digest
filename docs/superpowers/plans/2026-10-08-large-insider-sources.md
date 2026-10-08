@@ -10,5 +10,5 @@ Tech: Python, requests, ElementTree, Decimal, Jinja2, pytest.
 - [x] Extend shared parser with ticker, owner, transaction date/index and finite Decimal amounts.
 - [x] Wire main.py into enrichment and render exact trade data outside generated prose.
 - [x] Add templates/large_insiders.html.j2 to both outputs with coverage and source links.
-- [x] Run full pytest (12 pass), targeted py_compile and a live 20-filing SEC check (4 qualifying trades).
+- [x] Run full pytest (13 pass), targeted py_compile and a live 20-filing SEC check (4 qualifying trades).
 - [ ] Deploy only these changes atop current remote main, preserving unrelated local changes.

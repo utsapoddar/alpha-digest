@@ -4,6 +4,7 @@ from urllib.parse import urlsplit
 from xml.etree import ElementTree as ET
 
 import requests
+import time
 
 from digest.fetchers.base import edgar_get, edgar_get_xml
 from digest.fetchers.sec_edgar import _parse_form4_xml
@@ -53,7 +54,10 @@ def fetch_large_insiders(session, since: datetime, until: datetime,
     """Inspect a bounded newest-first feed; always disclose the coverage limit."""
     trades, seen, failed = [], set(), 0
     reached_since, scanned = False, 0
+    deadline = time.monotonic() + 180
     for start in range(0, max_filings, 100):
+        if time.monotonic() >= deadline:
+            break
         try:
             raw = edgar_get_xml(CURRENT_URL.format(start=start), session)
             if not raw:
@@ -67,6 +71,8 @@ def fetch_large_insiders(session, since: datetime, until: datetime,
             reached_since = True
             break
         for entry in entries:
+            if time.monotonic() >= deadline:
+                break
             updated = entry.findtext(f'{ATOM}updated', '')[:10]
             filed = datetime.fromisoformat(updated)
             if filed < since:
@@ -91,6 +97,8 @@ def fetch_large_insiders(session, since: datetime, until: datetime,
                 items = (index or {}).get('directory', {}).get('item', [])
                 found = False
                 for item in items:
+                    if time.monotonic() >= deadline:
+                        break
                     name = item.get('name', '')
                     if not name.endswith('.xml') or '/' in name:
                         continue
@@ -110,6 +118,6 @@ def fetch_large_insiders(session, since: datetime, until: datetime,
             break
     coverage = (f'SEC discovery inspected {scanned} filings within the filing-date window; '
                 f'inspection cap {max_filings}, discovery limited to the newest {((max_filings + 99) // 100) * 100} feed entries. '
-                f'{failed} filing/feed retrieval failures. '
+                f'{failed} filing/feed retrieval failures; 180-second source budget. '
                 'This is not an exhaustive market-wide screen. Trade dates may precede filing dates.')
     return {'trades': merge_large_trades([], trades, min_value_usd), 'coverage': coverage}
