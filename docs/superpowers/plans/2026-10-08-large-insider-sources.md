@@ -11,4 +11,6 @@ Tech: Python, requests, ElementTree, Decimal, Jinja2, pytest.
 - [x] Wire main.py into enrichment and render exact trade data outside generated prose.
 - [x] Add templates/large_insiders.html.j2 to both outputs with coverage and source links.
 - [x] Run full pytest (13 pass), targeted py_compile and a live 20-filing SEC check (4 qualifying trades).
-- [ ] Deploy only these changes atop current remote main, preserving unrelated local changes.
+- [x] Deployed only these changes atop current remote main, preserving unrelated local changes.
+
+Production source verified at 26874ca on remote main; weekly workflow is active and its schedule is unchanged. No manual production email/publication run was triggered.
