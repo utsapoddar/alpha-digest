@@ -78,7 +78,7 @@ def fetch_large_insiders(session, since: datetime, until: datetime,
             if filed < since:
                 reached_since = True
                 break
-            if filed >= until:
+            if filed > until:
                 continue
             link = entry.find(f'{ATOM}link')
             url = link.get('href', '') if link is not None else ''
